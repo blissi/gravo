@@ -23,18 +23,20 @@ RUN make build
 #############################
 FROM alpine
 
+WORKDIR /app
+
 # Import from builder
 COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /etc/passwd /etc/passwd
 
+COPY docker/bin/* /app/
+
 # Copy our static executable
 COPY --from=builder /go/src/github.com/andig/gravo/gravo /usr/bin/gravo
-
-# Use an unprivileged user.
-USER appuser
 
 EXPOSE 8000
 
 # Run the binary.
-ENTRYPOINT ["/usr/bin/gravo"]
+ENTRYPOINT [ "/app/entrypoint.sh" ]
+CMD [ "/usr/bin/gravo" ]

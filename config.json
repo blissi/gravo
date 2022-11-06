@@ -1,0 +1,30 @@
+{
+    "name": "gravo",
+    "version": "0.4.4",
+    "slug": "gravo",
+    "description": "Grafana for Volkszähler",
+    "url": "https://github.com/andig/gravo",
+    "arch": ["armhf", "armv7", "aarch64", "amd64", "i386"],
+    "startup": "application",
+    "panel_icon": "mdi:ev-station",
+    "panel_admin": false,
+    "boot": "auto",
+    "legacy": true,
+    "stage": "experimental",
+    "ingress": false,
+    "init": false,
+    "options": {
+        "api": "https://www.volkszaehler.code-factory.de/middleware.php"
+    },
+    "schema":  {
+        "api": "str"
+    },
+    "host_network": true,
+    "map": ["config:rw"],
+    "ports": {
+      "8000/udp": 8000
+    },
+    "ports_description": {
+      "8000/udp": "Website port"
+    }
+}
