@@ -8,6 +8,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"io"
 
 	"github.com/andig/gravo/grafana"
 	"github.com/andig/gravo/volkszaehler"
@@ -163,7 +164,13 @@ func (server *Server) executeSearch() []grafana.SearchResponse {
 
 func (server *Server) queryHandler(w http.ResponseWriter, r *http.Request) {
 	qr := grafana.QueryRequest{}
-	if err := json.NewDecoder(r.Body).Decode(&qr); err != nil {
+
+	// Replace payload:"" as this results in a runtime error because it cannot be unmarshaled to TargetData struct!
+	bodySB := new(strings.Builder)
+	io.Copy(bodySB, r.Body)
+	bodyString := strings.ReplaceAll(bodySB.String(), `"payload":"",`, "")
+
+	if err := json.NewDecoder(strings.NewReader(bodyString)).Decode(&qr); err != nil {
 		log.Printf("json decode failed: %v", err)
 		http.Error(w, fmt.Sprintf("json decode failed: %v", err), http.StatusBadRequest)
 
@@ -206,7 +213,11 @@ func (server *Server) executeQuery(qr grafana.QueryRequest) []grafana.QueryRespo
 		go func(idx int, target grafana.Target) {
 			var qres grafana.QueryResponse
 
-			context := strings.ToLower(target.Data.Context)
+			var context string
+			if target.Data != nil {
+				context = strings.ToLower(target.Data.Context)
+			}
+			
 			if context == "prognosis" {
 				qres = server.queryPrognosis(target)
 			} else {
@@ -220,7 +231,7 @@ func (server *Server) executeQuery(qr grafana.QueryRequest) []grafana.QueryRespo
 			}
 			server.cacheMux.Unlock()
 
-			if target.Data.Name != "" {
+			if target.Data != nil && target.Data.Name != "" {
 				qres.Target = target.Data.Name
 			}
 
@@ -242,12 +253,12 @@ func (server *Server) queryData(target grafana.Target, qr *grafana.QueryRequest)
 	}
 
 	var group string
-	if target.Data.Group != "" {
+	if target.Data != nil && target.Data.Group != "" {
 		group = strings.ToLower(target.Data.Group)
 	}
 
 	var options string
-	if target.Data.Options != "" {
+	if target.Data != nil && target.Data.Options != "" {
 		options = strings.ToLower(target.Data.Options)
 	}
 
@@ -284,7 +295,7 @@ func (server *Server) queryPrognosis(target grafana.Target) grafana.QueryRespons
 		Datapoints: []grafana.ResponseTuple{},
 	}
 
-	if target.Data.Period != "" {
+	if target.Data != nil && target.Data.Period != "" {
 		pr, err := server.api.QueryPrognosis(target.Target, target.Data.Period)
 		if err != nil {
 			log.Printf("api call failed: %v", err)
