@@ -103,6 +103,33 @@ func (server *Server) searchHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (server *Server) metricsHandler(w http.ResponseWriter, r *http.Request) {
+	sr := grafana.MetricsRequest{}
+	if err := json.NewDecoder(r.Body).Decode(&sr); err != nil {
+		log.Printf("json decode failed: %v", err)
+		http.Error(w, fmt.Sprintf("json decode failed: %v", err), http.StatusBadRequest)
+
+		return
+	}
+
+	entities := server.getPublicEntites()
+
+	resp := []grafana.MetricsResponse{}
+	for _, entity := range entities {
+		resp = append(resp, grafana.MetricsResponse{
+			Text: entity.Title,
+			UUID: entity.UUID,
+		})
+	}
+
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		log.Printf("json encode failed: %v", err)
+		http.Error(w, fmt.Sprintf("json encode failed: %v", err), http.StatusInternalServerError)
+
+		return
+	}
+}
+
 func (server *Server) flattenEntities(result *[]volkszaehler.Entity, entities []volkszaehler.Entity, parent string) {
 	for _, entity := range entities {
 		if parent != "" {

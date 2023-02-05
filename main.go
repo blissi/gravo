@@ -39,6 +39,7 @@ func main() {
 	http.HandleFunc("/", handler(server.rootHandler, *verbose))
 	http.HandleFunc("/query", handler(server.queryHandler, *verbose))
 	http.HandleFunc("/search", handler(server.searchHandler, *verbose))
+	http.HandleFunc("/metrics", handler(server.metricsHandler, *verbose))
 	http.HandleFunc("/annotations", handler(server.annotationsHandler, *verbose))
 	http.HandleFunc("/tag-keys", handler(server.tagKeysHandler, *verbose))
 	http.HandleFunc("/tag-values", handler(server.tagValuesHandler, *verbose))

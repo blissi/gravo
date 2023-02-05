@@ -136,3 +136,14 @@ type SearchResponse struct {
 	Text string `json:"text"`
 	UUID string `json:"value"`
 }
+
+// MetricsRequest encodes the information provided by Grafana in /metrics.
+// https://github.com/simPod/GrafanaJsonDatasource#metrics
+type MetricsRequest struct {
+}
+
+// MetricsResponse contains the response for the /metrics-request.
+type MetricsResponse struct {
+	Text string `json:"label"`
+	UUID string `json:"value"`
+}
